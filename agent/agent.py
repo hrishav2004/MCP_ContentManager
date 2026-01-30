@@ -1,8 +1,7 @@
 from llm.intent_router import IntentRouter
 
-from tools.create import ActionPlanGeneratorWrite
-from tools.search import ActionPlanGenerator
-from tools.update import ActionPlanGeneratorUpdate
+from tools import ActionPlanGeneratorWrite
+from tools import ActionPlanGenerator
 
 
 class Agent:
@@ -20,7 +19,7 @@ class Agent:
             return ActionPlanGeneratorWrite().run(user_query)
 
         if intent == "UPDATE":
-            return ActionPlanGeneratorUpdate().run(user_query)
+            return ActionPlanGeneratorWrite().run(user_query)
 
         if intent == "SEARCH":
             return ActionPlanGenerator().run(user_query)
