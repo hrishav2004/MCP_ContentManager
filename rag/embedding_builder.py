@@ -8,77 +8,65 @@ from langchain_community.vectorstores import FAISS
 
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-DATA_DIR = BASE_DIR / "data" / "document_store"
-VECTORSTORE_DIR = BASE_DIR / "rag" / "vectorstore"
+API_DOCS_PATH = BASE_DIR / "data" / "api_docs.md"
+VECTORSTORE_DIR = BASE_DIR / "rag" / "vectorstore" / "tools"
 
 
-def load_documents() -> List[Document]:
-    documents: List[Document] = []
+def load_tool_docs() -> List[Document]:
+    if not API_DOCS_PATH.exists():
+        raise FileNotFoundError(f"api_docs.md not found at {API_DOCS_PATH}")
 
-    if not DATA_DIR.exists():
-        raise FileNotFoundError(f"DATA_DIR not found: {DATA_DIR}")
+    raw_text = API_DOCS_PATH.read_text(encoding="utf-8").strip()
+    if not raw_text:
+        raise ValueError("api_docs.md is empty")
 
-    for record_dir in DATA_DIR.iterdir():
-        if not record_dir.is_dir():
+    docs: List[Document] = []
+
+    # Expecting markdown like:
+    # ## create
+    # description...
+    sections = raw_text.split("## ")[1:]
+
+    for section in sections:
+        lines = section.splitlines()
+        tool_name = lines[0].strip()
+        description = "\n".join(lines[1:]).strip()
+
+        if not description:
             continue
 
-        record_id = record_dir.name
-
-        for file in record_dir.iterdir():
-            if file.suffix.lower() not in [".txt", ".md"]:
-                continue
-
-            text = file.read_text(encoding="utf-8").strip()
-            if not text:
-                # Skip empty files safely
-                continue
-
-            documents.append(
-                Document(
-                    page_content=text,
-                    metadata={
-                        "record_id": record_id,
-                        "file_name": file.name,
-                    },
-                )
+        docs.append(
+            Document(
+                page_content=description,
+                metadata={"tool": tool_name}
             )
+        )
 
-    return documents
+    return docs
 
 
-def build_embeddings():
-    docs = load_documents()
-    print(f"📄 Documents loaded: {len(docs)}")
-
-    if not docs:
-        raise ValueError("No non-empty documents found to embed")
+def build_tool_embeddings():
+    docs = load_tool_docs()
+    print(f"🛠 Tool docs loaded: {len(docs)}")
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=100,
+        chunk_size=300,
+        chunk_overlap=30,
     )
+    chunks = splitter.split_documents(docs)
+    print(f"🧩 Tool chunks created: {len(chunks)}")
 
-    split_docs = splitter.split_documents(docs)
-    print(f"🧩 Chunks created: {len(split_docs)}")
-
-    if not split_docs:
-        raise ValueError("Documents loaded, but no chunks were created")
-
-    embedding_model = HuggingFaceEmbeddings(
+    embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
 
-    vectorstore = FAISS.from_documents(
-        split_docs,
-        embedding_model,
-    )
+    vectorstore = FAISS.from_documents(chunks, embeddings)
 
     VECTORSTORE_DIR.mkdir(parents=True, exist_ok=True)
     vectorstore.save_local(str(VECTORSTORE_DIR))
 
-    print(f"✅ Embedded {len(split_docs)} chunks successfully")
-    print(f"📦 Vectorstore saved at: {VECTORSTORE_DIR}")
+    print(f"✅ Tool embeddings stored at {VECTORSTORE_DIR}")
 
 
 if __name__ == "__main__":
-    build_embeddings()
+    build_tool_embeddings()
