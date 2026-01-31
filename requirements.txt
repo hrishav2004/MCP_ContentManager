@@ -1,14 +1,15 @@
+# MCP
 mcp
-langchain_huggingface
-# RAG & Embeddings
-langchain
+
+# LangChain (PINNED – IMPORTANT)
+langchain==0.1.16
+langchain-community==0.0.36
+langchain-huggingface
+
+# RAG / Vector Search
 faiss-cpu
 sentence-transformers
 
-# Utilities (safe + commonly required)
+# Utilities
 numpy
-langchain
-langchain-community
-langchain-huggingface
-faiss-cpu
-sentence-transformers
+pydantic<2
