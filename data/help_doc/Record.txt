@@ -6,3 +6,4 @@ and creation date.
 How does record search work?
 The system can search records using filters (status, date) or
 semantic search using meaning-based queries.
+

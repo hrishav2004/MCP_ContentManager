@@ -1,42 +1,54 @@
 import requests
-from urllib.parse import urlencode
+from typing import Optional, Dict, Any
 
 
-class SearchTool:
+BASE_URL = "http://localhost/CMServiceAPI/Record"
 
-    BASE_URL = "http://localhost/CMServiceAPI"
 
-    def execute(self, action_plan: dict):
+def search_records(
+    *,
+    type: Optional[str] = None,
+    title: Optional[str] = None,
+    number: Optional[str] = None,
+    created: Optional[str] = None,
+    status: Optional[str] = None,
+    properties: str = "NameString",
+    response_format: str = "json",
+) -> Dict[str, Any]:
+    """
+    Call CMServiceAPI Record search using native query fields.
+    """
 
-        path = action_plan.get("path")
-        parameters = action_plan.get("parameters", {})
+    params = {
+        "format": response_format,
+        "Properties": properties,
+    }
 
-        # ----------------------------
-        # DEFAULT PARAMETERS
-        # ----------------------------
-        if not parameters:
-            parameters = {"q": "all"}
+    query_parts = []
 
-        # ----------------------------
-        # BUILD QUERY STRING
-        # ----------------------------
+    if type:
+        query_parts.append(f"type:{type}")
 
-        # Convert parameters dict to query string
-        # Example:
-        # RecordNumber=26/1&format=json&properties=NameString
+    if title:
+        query_parts.append(f"title:{title}")
 
-        query_string = urlencode(parameters)
+    if number:
+        query_parts.append(f"number:{number}")
 
-        # ----------------------------
-        # FINAL URL
-        # ----------------------------
-        url = f"{self.BASE_URL}/{path}?{query_string}"
+    if created:
+        query_parts.append(f"created:{created}")
 
-        print("\nExecuting GET request:")
-        print(url)
+    if status:
+        query_parts.append(f"status:{status}")
 
-        try:
-            response = requests.get(url)
+    if query_parts:
+        params["q"] = "/".join(query_parts)
+
+    response = requests.get(
+        BASE_URL,
+        params=params,
+        timeout=10,
+    )
 
             response.raise_for_status()
 
