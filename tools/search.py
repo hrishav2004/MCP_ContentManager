@@ -27,8 +27,6 @@ def search_records(
     query_parts = []
 
     if type:
-
-        
         query_parts.append(f"type:{type}")
 
     if title:
@@ -52,5 +50,12 @@ def search_records(
         timeout=10,
     )
 
-    response.raise_for_status()
-    return response.json()
+            response.raise_for_status()
+
+            return response.json()
+
+        except Exception as e:
+            return {
+                "error": "GET request failed",
+                "details": str(e)
+            }
