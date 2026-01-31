@@ -5,7 +5,7 @@ SEARCH
 Return this shape:
 
 {
-  "path":"Record/",
+  "path":"Record",
   "method":"GET",
   "parameters":{
     "q":"<extracted_query>",
@@ -41,13 +41,15 @@ Infer RecordType from user tokens ("document"/"doc"/"file" → Document; "folder
 
 Extract a clear RecordTitle from the query. Always use method = "POST" and path = "Record/".
 
+Also add RecordNumber, RecordDateCreated and RecordEditState if these are provided in the user query.
+
 UPDATE
 
 Return this shape when intent is update:
 
 {
   "path":"Record/",
-  "method":"PUT",
+  "method":"POST",
   "parameters_to_search":{
     // include only the keys the user supplied
     "number":"<value_if_provided>",
