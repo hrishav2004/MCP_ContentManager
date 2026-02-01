@@ -1,64 +1,69 @@
+from mcp.server.fastapi import MCPServer
 import requests
 
-class CreateTool:
+mcp = MCPServer()
 
-    BASE_URL = "http://localhost/CMServiceAPI"
+BASE_URL = "http://localhost/CMServiceAPI"
 
-    def execute(self, action_plan: dict):
-        """
-        Execute CREATE Record operation using CMServiceAPI.
-        """
 
-        path = action_plan.get("path")
-        parameters = action_plan.get("parameters", {})
+@mcp.tool()
+async def create_record(action_plan: dict) -> dict:
+    """
+    Create a record in Content Manager.
 
-        # ----------------------------
-        # VALIDATION
-        # ----------------------------
-        if not path:
-            return {"error": "Missing API path in action plan"}
+    Args:
+        action_plan: Action plan with API path and parameters.
+    """
 
-        if not parameters:
-            return {"error": "Missing parameters for CREATE operation"}
+    path = action_plan.get("path")
+    parameters = action_plan.get("parameters", {})
 
-        record_type = parameters.get("RecordRecordType")
-        record_title = parameters.get("RecordTitle")
+    # ----------------------------
+    # VALIDATION
+    # ----------------------------
+    if not path:
+        return {"error": "Missing API path in action plan"}
 
-        if not record_type or not record_title:
-            return {
-                "error": "Missing required fields",
-                "required": ["RecordRecordType", "RecordTitle"],
-            }
+    if not parameters:
+        return {"error": "Missing parameters for CREATE operation"}
 
-        # ----------------------------
-        # BUILD PAYLOAD (JSON BODY)
-        # ----------------------------
-        payload = {
-            "RecordRecordType": record_type,
-            "RecordTitle": record_title,
+    record_type = parameters.get("RecordRecordType")
+    record_title = parameters.get("RecordTitle")
+
+    if not record_type or not record_title:
+        return {
+            "error": "Missing required fields",
+            "required": ["RecordRecordType", "RecordTitle"],
         }
 
-        # ----------------------------
-        # FINAL URL
-        # ----------------------------
-        url = f"{self.BASE_URL}/{path}"
+    # ----------------------------
+    # BUILD PAYLOAD
+    # ----------------------------
+    payload = {
+        "RecordRecordType": record_type,
+        "RecordTitle": record_title,
+    }
 
-        print("\nExecuting POST request:")
-        print(url)
-        print("Payload:", payload)
+    # ----------------------------
+    # FINAL URL
+    # ----------------------------
+    url = f"{BASE_URL}/{path}"
 
-        try:
-            response = requests.post(
-                url,
-                json=payload,
-                timeout=10,
-            )
+    print("\n[MCP] Executing POST request:")
+    print(url)
+    print("Payload:", payload)
 
-            response.raise_for_status()
-            return response.json()
+    try:
+        response = requests.post(
+            url,
+            json=payload,
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
 
-        except Exception as e:
-            return {
-                "error": "POST request failed",
-                "details": str(e),
-            }
+    except Exception as e:
+        return {
+            "error": "POST request failed",
+            "details": str(e),
+        }
