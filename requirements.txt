@@ -17,3 +17,4 @@ requests
 mcp-server
 fastapi
 uvicorn
+tabulate
